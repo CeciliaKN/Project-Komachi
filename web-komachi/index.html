@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文書ライブラリ - Web Komachi</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="library-container">
+        <header class="library-header">
+            <h1>Web Komachi</h1>
+            <p class="subtitle">古典日本語文書ライブラリ</p>
+            <nav class="header-nav">
+                <a href="index.html" class="active">ライブラリ</a>
+                <a href="compare.html">比較</a>
+            </nav>
+        </header>
+        
+        <div class="library-content">
+            <aside class="filter-sidebar">
+                <div class="stats-box" id="stats-box">
+                    <div class="stat-item">
+                        <span class="stat-value" id="stat-docs">-</span>
+                        <span class="stat-label">文書</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="stat-tokens">-</span>
+                        <span class="stat-label">語句</span>
+                    </div>
+                </div>
+                
+                <div class="filter-section">
+                    <h3 class="filter-title">時代</h3>
+                    <div class="filter-list" id="filter-era"></div>
+                </div>
+                
+                <div class="filter-section">
+                    <h3 class="filter-title">文体</h3>
+                    <div class="filter-list" id="filter-style"></div>
+                </div>
+                
+                <div class="filter-section">
+                    <h3 class="filter-title">タグ</h3>
+                    <div class="filter-list" id="filter-general"></div>
+                </div>
+                
+                <div class="filter-section">
+                    <button class="btn btn-secondary" id="btn-clear-filters">
+                        フィルターをクリア
+                    </button>
+                </div>
+            </aside>
+            
+            <main class="documents-area">
+                <div class="documents-toolbar">
+                    <div class="search-box">
+                        <input type="text" id="search-input" placeholder="タイトルや作者で検索...">
+                    </div>
+                </div>
+                
+                <div class="documents-grid" id="documents-grid">
+                    <div class="loading">読み込み中...</div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script src="js/app.js"></script>
+    <script src="js/library.js"></script>
+</body>
+</html>

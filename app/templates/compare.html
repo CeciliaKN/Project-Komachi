@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文書比較 - Project Komachi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* 比较页面专用样式 */
+        .compare-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .compare-header {
+            background: linear-gradient(135deg, var(--primary-color), #6B3410);
+            color: #FFF;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .compare-header h1 {
+            font-size: 1.5rem;
+        }
+        
+        .header-nav {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .header-nav a {
+            color: #FFF;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            background: rgba(255,255,255,0.15);
+            transition: background 0.3s;
+        }
+        
+        .header-nav a:hover {
+            background: rgba(255,255,255,0.25);
+        }
+        
+        /* 文档选择区 */
+        .selection-bar {
+            background: var(--panel-bg);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .selection-bar label {
+            font-weight: 500;
+            color: var(--primary-color);
+        }
+        
+        .doc-select {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            min-width: 250px;
+            font-family: inherit;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            color: #FFF;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+        
+        .btn-secondary {
+            background: var(--secondary-color);
+            color: var(--text-color);
+        }
+        
+        .selected-docs {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .selected-doc-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            background: var(--secondary-color);
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .selected-doc-tag .remove {
+            margin-left: 0.5rem;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+        
+        .selected-doc-tag .remove:hover {
+            opacity: 1;
+        }
+        
+        /* 比较视图区 */
+        .compare-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        .compare-panels {
+            display: flex;
+            flex: 1;
+            overflow-x: auto;
+        }
+        
+        .compare-panel {
+            flex: 1;
+            min-width: 400px;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            background: var(--panel-bg);
+        }
+        
+        .compare-panel:last-child {
+            border-right: none;
+        }
+        
+        .panel-header {
+            padding: 1rem;
+            background: var(--bg-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .panel-header h3 {
+            margin: 0 0 0.5rem 0;
+            color: var(--primary-color);
+        }
+        
+        .panel-meta {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+        
+        .panel-meta span {
+            margin-right: 1rem;
+        }
+        
+        .panel-tags {
+            margin-top: 0.5rem;
+            display: flex;
+            gap: 0.3rem;
+            flex-wrap: wrap;
+        }
+        
+        .panel-tag {
+            font-size: 0.75rem;
+            padding: 0.15rem 0.5rem;
+            background: var(--panel-bg);
+            border-radius: 8px;
+        }
+        
+        .panel-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+        
+        /* 文本显示 */
+        .paragraph {
+            margin-bottom: 1.5rem;
+        }
+        
+        .paragraph-content {
+            line-height: 2;
+        }
+        
+        .token {
+            display: inline;
+            cursor: pointer;
+            padding: 0.1rem 0;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .token:hover {
+            background: rgba(139, 69, 19, 0.1);
+        }
+        
+        .token.highlighted {
+            background: rgba(255, 193, 7, 0.3);
+        }
+        
+        /* 空状态 */
+        .empty-panel {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: var(--text-light);
+            padding: 2rem;
+            min-width: 400px;
+        }
+        
+        .empty-panel .icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* 详情侧边栏 */
+        .detail-sidebar {
+            width: 300px;
+            background: var(--panel-bg);
+            border-left: 1px solid var(--border-color);
+            padding: 1rem;
+            overflow-y: auto;
+        }
+        
+        .detail-sidebar h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .detail-item {
+            margin-bottom: 0.75rem;
+        }
+        
+        .detail-label {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+        
+        .detail-value {
+            font-weight: 500;
+        }
+        
+        /* 视图模式切换 */
+        .view-toggle {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .view-toggle button {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            background: var(--panel-bg);
+            cursor: pointer;
+            border-radius: var(--radius);
+            transition: all 0.3s;
+        }
+        
+        .view-toggle button.active {
+            background: var(--primary-color);
+            color: #FFF;
+            border-color: var(--primary-color);
+        }
+        
+        /* 品詞カラー */
+        .colored .token[data-pos="名詞"] { color: #4A90D9; }
+        .colored .token[data-pos="動詞"] { color: #E74C3C; }
+        .colored .token[data-pos="形容詞"] { color: #27AE60; }
+        .colored .token[data-pos="副詞"] { color: #9B59B6; }
+        .colored .token[data-pos="連体詞"] { color: #F39C12; }
+        .colored .token[data-pos="助詞"] { color: #95A5A6; }
+        .colored .token[data-pos="助動詞"] { color: #7F8C8D; }
+    </style>
+</head>
+<body>
+    <div class="compare-container">
+        <!-- 头部 -->
+        <header class="compare-header">
+            <h1>文書比較</h1>
+            <nav class="header-nav">
+                <a href="{{ url_for('index') }}">ホーム</a>
+                <a href="{{ url_for('analyzer_page') }}">解析</a>
+                <a href="{{ url_for('library') }}">ライブラリ</a>
+            </nav>
+        </header>
+        
+        <!-- 文档选择区 -->
+        <div class="selection-bar">
+            <label>文書を選択:</label>
+            <select class="doc-select" id="doc-select">
+                <option value="">-- 文書を選択 --</option>
+                {% for doc in documents %}
+                <option value="{{ doc.id }}" data-title="{{ doc.title }}">
+                    {{ doc.title }} ({{ doc.dictionary }})
+                </option>
+                {% endfor %}
+            </select>
+            <button class="btn btn-primary" id="btn-add-doc">追加</button>
+            
+            <div class="selected-docs" id="selected-docs">
+                <!-- 选中的文档将显示在这里 -->
+            </div>
+            
+            <div style="margin-left: auto;">
+                <div class="view-toggle">
+                    <button class="active" data-view="side">並列表示</button>
+                    <button data-view="overlay">重ね合わせ</button>
+                </div>
+            </div>
+            
+            <label>
+                <input type="checkbox" id="toggle-colors"> 品詞カラー
+            </label>
+        </div>
+        
+        <!-- 比较内容区 -->
+        <div class="compare-content">
+            <div class="compare-panels" id="compare-panels">
+                <div class="empty-panel">
+                    <div class="icon">選択</div>
+                    <h3>文書を選択してください</h3>
+                    <p>上の選択メニューから比較したい文書を追加してください。<br>最大4つまで同時に比較できます。</p>
+                </div>
+            </div>
+            
+            <!-- 详情侧边栏 -->
+            <aside class="detail-sidebar" id="detail-sidebar" style="display: none;">
+                <h3>語句詳細</h3>
+                <div id="detail-content">
+                    <p class="hint">語句をクリックして詳細を表示</p>
+                </div>
+            </aside>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/compare.js') }}"></script>
+</body>
+</html>

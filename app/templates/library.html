@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文書ライブラリ - Project Komachi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* 文档库专用样式 */
+        .library-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .library-header {
+            background: linear-gradient(135deg, var(--primary-color), #6B3410);
+            color: #FFF;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .library-header h1 {
+            font-size: 1.5rem;
+        }
+        
+        .header-nav {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .header-nav a {
+            color: #FFF;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            background: rgba(255,255,255,0.15);
+            transition: background 0.3s;
+        }
+        
+        .header-nav a:hover {
+            background: rgba(255,255,255,0.25);
+        }
+        
+        .library-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        /* 侧边栏筛选器 */
+        .filter-sidebar {
+            width: 280px;
+            background: var(--panel-bg);
+            border-right: 1px solid var(--border-color);
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+        
+        .filter-section {
+            margin-bottom: 1.5rem;
+        }
+        
+        .filter-title {
+            font-size: 1rem;
+            color: var(--primary-color);
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .filter-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .filter-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+        
+        .filter-tag:hover {
+            border-color: var(--primary-color);
+        }
+        
+        .filter-tag.active {
+            background: var(--primary-color);
+            color: #FFF;
+            border-color: var(--primary-color);
+        }
+        
+        .filter-tag .count {
+            margin-left: 0.5rem;
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+        
+        /* 主要内容区 */
+        .documents-area {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+        
+        .documents-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .search-box input {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            width: 300px;
+            font-family: inherit;
+        }
+        
+        .toolbar-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            color: #FFF;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+        
+        .btn-secondary {
+            background: var(--secondary-color);
+            color: var(--text-color);
+        }
+        
+        /* 文档列表 */
+        .documents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .document-card {
+            background: var(--panel-bg);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .document-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+        }
+        
+        .doc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .doc-title {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            margin: 0;
+        }
+        
+        .doc-dictionary {
+            font-size: 0.8rem;
+            padding: 0.2rem 0.5rem;
+            background: var(--secondary-color);
+            border-radius: 4px;
+        }
+        
+        .doc-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-bottom: 1rem;
+        }
+        
+        .doc-tag {
+            font-size: 0.8rem;
+            padding: 0.2rem 0.6rem;
+            background: var(--bg-color);
+            border-radius: 12px;
+            color: var(--text-light);
+        }
+        
+        .doc-tag.era { border-left: 3px solid #E74C3C; }
+        .doc-tag.style { border-left: 3px solid #3498DB; }
+        .doc-tag.author { border-left: 3px solid #27AE60; }
+        .doc-tag.genre { border-left: 3px solid #9B59B6; }
+        
+        .doc-metadata {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+        }
+        
+        .doc-metadata span {
+            display: inline-block;
+            margin-right: 1rem;
+        }
+        
+        .doc-stats {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: var(--bg-color);
+            border-radius: var(--radius);
+        }
+        
+        .doc-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .doc-actions .btn {
+            flex: 1;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-light);
+        }
+        
+        .empty-state .icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--panel-bg);
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            color: var(--primary-color);
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-family: inherit;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .tag-input-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            min-height: 45px;
+        }
+        
+        .tag-input-container .tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.5rem;
+            background: var(--secondary-color);
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .tag-input-container .tag .remove {
+            margin-left: 0.5rem;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+        
+        .tag-input-container input {
+            flex: 1;
+            min-width: 100px;
+            border: none;
+            padding: 0.25rem;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="library-container">
+        <!-- 头部 -->
+        <header class="library-header">
+            <h1>文書ライブラリ</h1>
+            <nav class="header-nav">
+                <a href="{{ url_for('index') }}">ホーム</a>
+                <a href="{{ url_for('analyzer_page') }}">解析</a>
+                <a href="{{ url_for('compare') }}">比較</a>
+            </nav>
+        </header>
+        
+        <div class="library-content">
+            <!-- 筛选侧边栏 -->
+            <aside class="filter-sidebar">
+                <div class="filter-section">
+                    <h3 class="filter-title">時代</h3>
+                    <div class="filter-list" id="filter-era">
+                        {% for tag in tags if tag.category == 'era' %}
+                        <span class="filter-tag" data-tag="{{ tag.name }}" data-category="era">
+                            {{ tag.name }}<span class="count">({{ tag.doc_count }})</span>
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="filter-section">
+                    <h3 class="filter-title">文体</h3>
+                    <div class="filter-list" id="filter-style">
+                        {% for tag in tags if tag.category == 'style' %}
+                        <span class="filter-tag" data-tag="{{ tag.name }}" data-category="style">
+                            {{ tag.name }}<span class="count">({{ tag.doc_count }})</span>
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="filter-section">
+                    <h3 class="filter-title">タグ</h3>
+                    <div class="filter-list" id="filter-general">
+                        {% for tag in tags if tag.category == 'general' %}
+                        <span class="filter-tag" data-tag="{{ tag.name }}" data-category="general">
+                            {{ tag.name }}<span class="count">({{ tag.doc_count }})</span>
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="filter-section">
+                    <button class="btn btn-secondary" id="btn-clear-filters" style="width: 100%;">
+                        フィルターをクリア
+                    </button>
+                </div>
+            </aside>
+            
+            <!-- 文档列表区 -->
+            <main class="documents-area">
+                <div class="documents-toolbar">
+                    <div class="search-box">
+                        <input type="text" id="search-input" placeholder="タイトルや作者で検索...">
+                    </div>
+                    <div class="toolbar-actions">
+                        <button class="btn btn-primary" id="btn-import">txtインポート</button>
+                    </div>
+                </div>
+                
+                <div class="documents-grid" id="documents-grid">
+                    {% if documents %}
+                        {% for doc in documents %}
+                        <div class="document-card" data-id="{{ doc.id }}">
+                            <div class="doc-header">
+                                <h3 class="doc-title">{{ doc.title }}</h3>
+                                <span class="doc-dictionary">{{ doc.dictionary }}</span>
+                            </div>
+                            
+                            <div class="doc-tags">
+                                {% for tag in doc.tags %}
+                                <span class="doc-tag {{ tag.category }}">{{ tag.name }}</span>
+                                {% endfor %}
+                            </div>
+                            
+                            {% if doc.metadata %}
+                            <div class="doc-metadata">
+                                {% if doc.metadata.author %}
+                                <span>{{ doc.metadata.author }}</span>
+                                {% endif %}
+                                {% if doc.metadata.era %}
+                                <span>{{ doc.metadata.era }}</span>
+                                {% endif %}
+                                {% if doc.metadata.source %}
+                                <span>{{ doc.metadata.source }}</span>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            
+                            <div class="doc-stats">
+                                <span>{{ doc.paragraph_count }}段落</span>
+                                <span>{{ doc.token_count }}語句</span>
+                            </div>
+                            
+                            <div class="doc-actions">
+                                <button class="btn btn-primary btn-view" data-id="{{ doc.id }}">詳細を見る</button>
+                                <button class="btn btn-secondary btn-edit" data-id="{{ doc.id }}">編集</button>
+                                <button class="btn btn-secondary btn-delete" data-id="{{ doc.id }}">削除</button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="icon">空</div>
+                            <h3>文書がありません</h3>
+                            <p>テキスト解析ページで新しい文書を作成するか、txtファイルをインポートしてください。</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- 编辑模态框 -->
+    <div class="modal" id="edit-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>文書情報を編集</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-doc-id">
+                
+                <div class="form-group">
+                    <label for="edit-title">タイトル</label>
+                    <input type="text" id="edit-title">
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-author">作者</label>
+                    <input type="text" id="edit-author" placeholder="例：紫式部">
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-era">時代</label>
+                    <select id="edit-era">
+                        <option value="">選択してください</option>
+                        <option value="上代">上代</option>
+                        <option value="平安前期(781-900)">平安前期(781-900)</option>
+                        <option value="平安中期(901-1072)">平安中期(901-1072)</option>
+                        <option value="平安後期(1073-1159)">平安後期(1073-1159)</option>
+                        <option value="源平時代(1160-1221)">源平時代(1160-1221)</option>
+                        <option value="鎌倉時代">鎌倉時代</option>
+                        <option value="室町時代">室町時代</option>
+                        <option value="戦国時代">戦国時代</option>
+                        <option value="江戸時代">江戸時代</option>
+                        <option value="近代">近代</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-source">出典</label>
+                    <input type="text" id="edit-source" placeholder="例：源氏物語">
+                </div>
+                
+                <div class="form-group">
+                    <label>タグ</label>
+                    <div class="tag-input-container" id="edit-tags-container">
+                        <input type="text" id="edit-tags-input" placeholder="タグを入力してEnter...">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-notes">備考</label>
+                    <textarea id="edit-notes" placeholder="メモや注釈..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btn-cancel-edit">キャンセル</button>
+                <button class="btn btn-primary" id="btn-save-edit">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 导入模态框 -->
+    <div class="modal" id="import-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>txtファイルをインポート</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>ファイル選択</label>
+                    <input type="file" id="import-file" accept=".txt,.text">
+                </div>
+                
+                <div class="form-group">
+                    <label for="import-title">タイトル</label>
+                    <input type="text" id="import-title" placeholder="自動取得されます">
+                </div>
+                
+                <div class="form-group">
+                    <label for="import-dictionary">辞書</label>
+                    <select id="import-dictionary">
+                        {% for key, dict in dictionaries.items() %}
+                        <option value="{{ key }}">{{ dict.name }} - {{ dict.description }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="import-author">作者</label>
+                    <input type="text" id="import-author">
+                </div>
+                
+                <div class="form-group">
+                    <label for="import-era">時代</label>
+                    <select id="import-era">
+                        <option value="">選択してください</option>
+                        <option value="上代">上代</option>
+                        <option value="平安前期(781-900)">平安前期(781-900)</option>
+                        <option value="平安中期(901-1072)">平安中期(901-1072)</option>
+                        <option value="平安後期(1073-1159)">平安後期(1073-1159)</option>
+                        <option value="源平時代(1160-1221)">源平時代(1160-1221)</option>
+                        <option value="鎌倉時代">鎌倉時代</option>
+                        <option value="室町時代">室町時代</option>
+                        <option value="戦国時代">戦国時代</option>
+                        <option value="江戸時代">江戸時代</option>
+                        <option value="近代">近代</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>タグ</label>
+                    <div class="tag-input-container" id="import-tags-container">
+                        <input type="text" id="import-tags-input" placeholder="タグを入力してEnter...">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btn-cancel-import">キャンセル</button>
+                <button class="btn btn-primary" id="btn-do-import">インポートして解析</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/library.js') }}"></script>
+</body>
+</html>

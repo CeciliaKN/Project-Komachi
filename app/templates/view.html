@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ document.title }} - Project Komachi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* 文档查看页面专用样式 */
+        .view-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .view-header {
+            background: linear-gradient(135deg, var(--primary-color), #6B3410);
+            color: #FFF;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .view-header h1 {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        
+        .header-nav {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .header-nav a {
+            color: #FFF;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            background: rgba(255,255,255,0.15);
+            transition: background 0.3s;
+        }
+        
+        .header-nav a:hover {
+            background: rgba(255,255,255,0.25);
+        }
+        
+        .view-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        /* 文档信息侧边栏 */
+        .doc-sidebar {
+            width: 300px;
+            background: var(--panel-bg);
+            border-right: 1px solid var(--border-color);
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+        
+        .doc-meta-section {
+            margin-bottom: 1.5rem;
+        }
+        
+        .doc-meta-section h3 {
+            font-size: 1rem;
+            color: var(--primary-color);
+            margin-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+        
+        .doc-meta-item {
+            display: flex;
+            margin-bottom: 0.5rem;
+        }
+        
+        .doc-meta-label {
+            width: 80px;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        
+        .doc-meta-value {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+        
+        .doc-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .doc-tag {
+            font-size: 0.8rem;
+            padding: 0.2rem 0.6rem;
+            background: var(--bg-color);
+            border-radius: 12px;
+            color: var(--text-light);
+        }
+        
+        .doc-tag.era { border-left: 3px solid #E74C3C; }
+        .doc-tag.style { border-left: 3px solid #3498DB; }
+        .doc-tag.general { border-left: 3px solid #9B59B6; }
+        
+        /* 主要内容区 */
+        .analysis-area {
+            flex: 1;
+            padding: 1.5rem;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .analysis-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-shrink: 0;
+        }
+        
+        #result-container {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+        
+        .analysis-title {
+            font-size: 1.3rem;
+            color: var(--primary-color);
+        }
+        
+        .analysis-info {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+        
+        /* 段落样式 */
+        .paragraph {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: var(--panel-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+        
+        .paragraph-index {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+        }
+        
+        .paragraph-content {
+            line-height: 2.2;
+            font-size: 1.1rem;
+        }
+        
+        .token {
+            display: inline;
+            cursor: pointer;
+            padding: 0.1rem 0;
+            border-radius: 2px;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .token:hover {
+            background: rgba(139, 69, 19, 0.1);
+        }
+        
+        .token.selected {
+            background: rgba(139, 69, 19, 0.2);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .token.color-active {
+            background-color: var(--token-bg, rgba(139, 69, 19, 0.08));
+        }
+        
+        /* 右侧详情面板 */
+        .detail-sidebar {
+            width: 300px;
+            background: var(--panel-bg);
+            border-left: 1px solid var(--border-color);
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+        
+        .detail-panel h3 {
+            font-size: 1rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .detail-surface {
+            font-size: 2rem;
+            text-align: center;
+            padding: 1rem;
+            background: var(--bg-color);
+            border-radius: var(--radius);
+            margin-bottom: 1rem;
+        }
+        
+        .detail-pos {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            color: #FFF;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .detail-table {
+            width: 100%;
+            font-size: 0.9rem;
+            border-collapse: collapse;
+        }
+        
+        .detail-table th,
+        .detail-table td {
+            padding: 0.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .detail-table th {
+            color: var(--text-light);
+            font-weight: normal;
+            width: 40%;
+        }
+        
+        .hint {
+            color: var(--text-light);
+            font-style: italic;
+        }
+        
+        /* 凡例面板 */
+        .legend-panel {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .legend-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .legend-header h3 {
+            margin: 0;
+        }
+        
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+        
+        .toggle-switch input {
+            display: none;
+        }
+        
+        .toggle-slider {
+            width: 40px;
+            height: 20px;
+            background: var(--border-color);
+            border-radius: 10px;
+            position: relative;
+            transition: background 0.3s;
+        }
+        
+        .toggle-slider::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #FFF;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+        }
+        
+        .toggle-switch input:checked + .toggle-slider {
+            background: var(--primary-color);
+        }
+        
+        .toggle-switch input:checked + .toggle-slider::after {
+            transform: translateX(20px);
+        }
+        
+        .legend-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.85rem;
+            padding: 0.2rem 0.5rem;
+            background: var(--bg-color);
+            border-radius: 4px;
+        }
+        
+        .color-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div class="view-container">
+        <!-- 头部 -->
+        <header class="view-header">
+            <h1>{{ document.title }}</h1>
+            <nav class="header-nav">
+                <a href="{{ url_for('index') }}">ホーム</a>
+                <a href="{{ url_for('library') }}">ライブラリ</a>
+                <a href="{{ url_for('compare') }}">比較</a>
+            </nav>
+        </header>
+        
+        <div class="view-content">
+            <!-- 文档信息侧边栏 -->
+            <aside class="doc-sidebar">
+                <div class="doc-meta-section">
+                    <h3>文書情報</h3>
+                    <div class="doc-meta-item">
+                        <span class="doc-meta-label">辞書</span>
+                        <span class="doc-meta-value">{{ document.dictionary }}</span>
+                    </div>
+                    <div class="doc-meta-item">
+                        <span class="doc-meta-label">段落数</span>
+                        <span class="doc-meta-value">{{ document.paragraph_count }}</span>
+                    </div>
+                    <div class="doc-meta-item">
+                        <span class="doc-meta-label">語句数</span>
+                        <span class="doc-meta-value">{{ document.token_count }}</span>
+                    </div>
+                    {% if document.metadata %}
+                        {% if document.metadata.author %}
+                        <div class="doc-meta-item">
+                            <span class="doc-meta-label">作者</span>
+                            <span class="doc-meta-value">{{ document.metadata.author }}</span>
+                        </div>
+                        {% endif %}
+                        {% if document.metadata.era %}
+                        <div class="doc-meta-item">
+                            <span class="doc-meta-label">時代</span>
+                            <span class="doc-meta-value">{{ document.metadata.era }}</span>
+                        </div>
+                        {% endif %}
+                        {% if document.metadata.source %}
+                        <div class="doc-meta-item">
+                            <span class="doc-meta-label">出典</span>
+                            <span class="doc-meta-value">{{ document.metadata.source }}</span>
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                
+                {% if document.tags %}
+                <div class="doc-meta-section">
+                    <h3>タグ</h3>
+                    <div class="doc-tags">
+                        {% for tag in document.tags %}
+                        <span class="doc-tag {{ tag.category }}">{{ tag.name }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if document.metadata and document.metadata.notes %}
+                <div class="doc-meta-section">
+                    <h3>備考</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-light);">{{ document.metadata.notes }}</p>
+                </div>
+                {% endif %}
+            </aside>
+            
+            <!-- 解析结果区 -->
+            <main class="analysis-area">
+                <div class="analysis-header">
+                    <h2 class="analysis-title">解析結果</h2>
+                    <span class="analysis-info">{{ document.dictionary }} · {{ document.paragraphs|length }}段落</span>
+                </div>
+                
+                <div id="result-container">
+                    {% for para in document.paragraphs %}
+                    <div class="paragraph" data-para="{{ loop.index0 }}">
+                        <div class="paragraph-index">第{{ loop.index }}段</div>
+                        <div class="paragraph-content">{%- set para_idx = loop.index0 -%}
+{%- for token in para.tokens -%}
+<span class="token" data-para="{{ para_idx }}" data-token="{{ loop.index0 }}" data-features="{{ token.features | tojson | forceescape }}" data-surface="{{ token.surface | e }}">{{ token.surface }}</span>
+{%- endfor -%}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </main>
+            
+            <!-- 详情侧边栏 -->
+            <aside class="detail-sidebar">
+                <div class="detail-panel">
+                    <h3>語句詳細</h3>
+                    <div id="detail-content">
+                        <p class="hint">文中の語句をクリックして詳細を確認</p>
+                    </div>
+                </div>
+                
+                <div class="legend-panel">
+                    <div class="legend-header">
+                        <h3>品詞カラー</h3>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="color-toggle">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">表示</span>
+                        </label>
+                    </div>
+                    <div class="legend-list">
+                        <div class="legend-item"><span class="color-dot" style="background:#4A90D9"></span>名詞</div>
+                        <div class="legend-item"><span class="color-dot" style="background:#E74C3C"></span>動詞</div>
+                        <div class="legend-item"><span class="color-dot" style="background:#27AE60"></span>形容詞</div>
+                        <div class="legend-item"><span class="color-dot" style="background:#9B59B6"></span>副詞</div>
+                        <div class="legend-item"><span class="color-dot" style="background:#F39C12"></span>連体詞</div>
+                        <div class="legend-item"><span class="color-dot" style="background:#95A5A6"></span>助詞</div>
+                        <div class="legend-item"><span class="color-dot" style="background:#7F8C8D"></span>助動詞</div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/view.js') }}"></script>
+</body>
+</html>

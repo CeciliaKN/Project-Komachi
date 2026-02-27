@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Komachi - 中古・中世日本語学習プラットフォーム</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- ヘッダーナビゲーション -->
+        <header class="header">
+            <div class="logo">
+                <h1>ぷろじぇくと　小町<span class="subtitle">Project Komachi</span></h1>
+            </div>
+            <nav class="nav">
+                <a href="{{ url_for('index') }}" class="nav-btn" style="text-decoration: none;">ホーム</a>
+                <button id="btn-new" class="nav-btn">新規解析</button>
+                <button id="btn-history" class="nav-btn">履歴</button>
+                <a href="{{ url_for('library') }}" class="nav-btn" style="text-decoration: none;">ライブラリ</a>
+                <a href="{{ url_for('compare') }}" class="nav-btn" style="text-decoration: none;">比較</a>
+            </nav>
+        </header>
+
+        <!-- メインコンテンツ -->
+        <main class="main-content">
+            <!-- 左側：入力エリア -->
+            <aside class="sidebar left-panel">
+                <div class="panel">
+                    <h2>テキスト入力</h2>
+                    
+                    <!-- ファイルアップロード -->
+                    <div class="upload-area" id="upload-area">
+                        <input type="file" id="file-input" accept=".txt,.text" hidden>
+                        <div class="upload-content">
+                            <span class="upload-icon">upload here</span>
+                            <p>txtファイルをドラッグ＆ドロップまたはクリック</p>
+                        </div>
+                    </div>
+                    
+                    <!-- タイトル入力 -->
+                    <div class="form-group">
+                        <label for="doc-title">ドキュメントタイトル</label>
+                        <input type="text" id="doc-title" placeholder="タイトルを入力（任意）">
+                    </div>
+                    
+                    <!-- 辞書選択 -->
+                    <div class="form-group">
+                        <label for="dictionary-select">辞書を選択す</label>
+                        <select id="dictionary-select">
+                            {% for key, dict in dictionaries.items() %}
+                            <option value="{{ key }}" {% if key == 'unidic-chuko' %}selected{% endif %}>
+                                {{ dict.name }} - {{ dict.description }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- テキスト入力 -->
+                    <div class="form-group textarea-group">
+                        <label for="text-input">原文</label>
+                        <textarea id="text-input" placeholder="ここに日本語テキストを入力または貼り付け...&#10;&#10;例：花の色は移りにけりないたづらに我が身世にふるながめせし間に"></textarea>
+                    </div>
+                    
+                    <!-- 解析ボタン -->
+                    <button id="btn-analyze" class="btn-primary">解析開始</button>
+                </div>
+            </aside>
+
+            <!-- 中央：解析結果表示 -->
+            <section class="content-area">
+                <div class="result-header">
+                    <h2 id="result-title">解析結果</h2>
+                    <div class="result-info" id="result-info"></div>
+                </div>
+                
+                <div class="result-container" id="result-container">
+                    <div class="placeholder">
+                        <p>テキストを入力し「解析開始」をクリックす</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 右側：語句詳細 -->
+            <aside class="sidebar right-panel">
+                <div class="panel detail-panel" id="detail-panel">
+                    <h2>語句詳細</h2>
+                    <div class="detail-content" id="detail-content">
+                        <p class="hint">文中の語句をクリックし詳細を確認す</p>
+                    </div>
+                </div>
+                
+                <!-- カラー凡例 -->
+                <div class="panel legend-panel">
+                    <div class="legend-header">
+                        <h3>品詞カラー説明</h3>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="color-toggle">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">表示</span>
+                        </label>
+                    </div>
+                    <p class="legend-hint">クリックした語句の文のみ色付き表示</p>
+                    <div class="legend-list">
+                        <div class="legend-item"><span class="color-dot" style="background:#4A90D9"></span>名詞</div>
+                        <div class="legend-item"><span class="color-dot" style="background:#E74C3C"></span>動詞</div>
+                        <div class="legend-item"><span class="color-dot" style="background:#27AE60"></span>形容詞</div>
+                        <div class="legend-item"><span class="color-dot" style="background:#9B59B6"></span>副詞</div>
+                        <div class="legend-item"><span class="color-dot" style="background:#F39C12"></span>連体詞</div>
+                        <div class="legend-item"><span class="color-dot" style="background:#95A5A6"></span>助詞</div>
+                        <div class="legend-item"><span class="color-dot" style="background:#7F8C8D"></span>助動詞</div>
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- 履歴モーダル -->
+        <div class="modal" id="history-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>履歴</h2>
+                    <button class="modal-close" id="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="document-list" id="document-list">
+                        {% for doc in documents %}
+                        <div class="document-item" data-id="{{ doc.id }}">
+                            <div class="doc-info">
+                                <h3 class="doc-title">{{ doc.title }}</h3>
+                                <p class="doc-meta">{{ doc.dictionary }} · {{ doc.paragraph_count }}段 · {{ doc.created_at }}</p>
+                            </div>
+                            <div class="doc-actions">
+                                <button class="btn-load" data-id="{{ doc.id }}">読み込み</button>
+                                <button class="btn-delete" data-id="{{ doc.id }}">削除</button>
+                            </div>
+                        </div>
+                        {% else %}
+                        <p class="no-documents">履歴がありません</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ローディング表示 -->
+        <div class="loading-overlay" id="loading">
+            <div class="loading-spinner"></div>
+            <p>解析中...</p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

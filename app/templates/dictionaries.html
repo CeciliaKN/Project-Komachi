@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>辞書情報 - Project Komachi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* 辞书页面专用样式 */
+        .dict-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .dict-header {
+            background: linear-gradient(135deg, var(--primary-color), #6B3410);
+            color: #FFF;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .dict-header h1 {
+            font-size: 1.5rem;
+        }
+        
+        .header-nav {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .header-nav a {
+            color: #FFF;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            background: rgba(255,255,255,0.15);
+            transition: background 0.3s;
+        }
+        
+        .header-nav a:hover {
+            background: rgba(255,255,255,0.25);
+        }
+        
+        .dict-content {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        .section-title {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 0.5rem;
+        }
+        
+        .dict-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+        
+        .dict-card {
+            background: var(--panel-bg);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+        
+        .dict-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .dict-name {
+            font-size: 1.3rem;
+            color: var(--primary-color);
+            margin: 0;
+        }
+        
+        .dict-key {
+            font-size: 0.85rem;
+            padding: 0.25rem 0.75rem;
+            background: var(--secondary-color);
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        
+        .dict-description {
+            color: var(--text-light);
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+        
+        .dict-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-color);
+            border-radius: var(--radius);
+        }
+        
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .detail-label {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+        
+        .detail-value {
+            font-weight: 500;
+        }
+        
+        .feature-list {
+            margin-top: 1.5rem;
+        }
+        
+        .feature-list h3 {
+            color: var(--primary-color);
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .feature-table th,
+        .feature-table td {
+            padding: 0.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .feature-table th {
+            background: var(--secondary-color);
+            font-weight: 500;
+        }
+        
+        .feature-table tr:hover {
+            background: var(--bg-color);
+        }
+        
+        .index-col {
+            width: 60px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="dict-container">
+        <!-- 头部 -->
+        <header class="dict-header">
+            <h1>辞書情報</h1>
+            <nav class="header-nav">
+                <a href="{{ url_for('index') }}">ホーム</a>
+                <a href="{{ url_for('analyzer_page') }}">解析</a>
+                <a href="{{ url_for('library') }}">ライブラリ</a>
+            </nav>
+        </header>
+        
+        <main class="dict-content">
+            <h2 class="section-title">利用可能な辞書</h2>
+            
+            <div class="dict-grid">
+                {% for key, dict in dictionaries.items() %}
+                <div class="dict-card">
+                    <div class="dict-card-header">
+                        <h3 class="dict-name">{{ dict.name }}</h3>
+                        <span class="dict-key">{{ key }}</span>
+                    </div>
+                    
+                    <p class="dict-description">{{ dict.description }}</p>
+                    
+                    <div class="dict-details">
+                        <div class="detail-item">
+                            <span class="detail-label">対象時代</span>
+                            <span class="detail-value">
+                                {% if key == 'unidic-chuko' %}
+                                平安時代（中古日本語）
+                                {% elif key == 'unidic-kindaibungo' %}
+                                明治〜昭和初期（近代文語）
+                                {% elif key == 'unidic-waka' %}
+                                和歌全般
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">推奨用途</span>
+                            <span class="detail-value">
+                                {% if key == 'unidic-chuko' %}
+                                古典文学、物語、日記
+                                {% elif key == 'unidic-kindaibungo' %}
+                                近代文学、公文書
+                                {% elif key == 'unidic-waka' %}
+                                万葉集、古今集、新古今集
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- 特征字段说明 -->
+            <div class="feature-list">
+                <h3>UniDic 特徴フィールド説明</h3>
+                <p style="color: var(--text-light); margin-bottom: 1rem;">
+                    解析結果に含まれる各特徴フィールドの説明です。
+                </p>
+                
+                <table class="feature-table">
+                    <thead>
+                        <tr>
+                            <th class="index-col">番号</th>
+                            <th>フィールド名</th>
+                            <th>説明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td class="index-col">0</td><td>品詞大分類</td><td>主要な品詞カテゴリ（名詞、動詞、形容詞など）</td></tr>
+                        <tr><td class="index-col">1</td><td>品詞中分類</td><td>品詞の細分類</td></tr>
+                        <tr><td class="index-col">2</td><td>品詞小分類</td><td>さらに細かい品詞分類</td></tr>
+                        <tr><td class="index-col">3</td><td>品詞細分類</td><td>最も詳細な品詞分類</td></tr>
+                        <tr><td class="index-col">4</td><td>活用型</td><td>動詞・形容詞などの活用タイプ</td></tr>
+                        <tr><td class="index-col">5</td><td>活用形</td><td>現在の活用形（連用形、終止形など）</td></tr>
+                        <tr><td class="index-col">6</td><td>読み（現代）</td><td>現代仮名遣いでの読み</td></tr>
+                        <tr><td class="index-col">7</td><td>書字形（現代）</td><td>現代表記</td></tr>
+                        <tr><td class="index-col">8</td><td>書字形</td><td>原文の書字形</td></tr>
+                        <tr><td class="index-col">9</td><td>発音形書字形</td><td>発音に基づく書字形</td></tr>
+                        <tr><td class="index-col">10</td><td>語形</td><td>語の形態</td></tr>
+                        <tr><td class="index-col">11</td><td>仮名</td><td>仮名表記</td></tr>
+                        <tr><td class="index-col">12</td><td>語種</td><td>語種（和語、漢語、外来語など）</td></tr>
+                        <tr><td class="index-col">13</td><td>語頭変化型</td><td>語頭の音変化タイプ</td></tr>
+                        <tr><td class="index-col">14</td><td>語頭変化形</td><td>語頭変化の形</td></tr>
+                        <tr><td class="index-col">15</td><td>語末変化型</td><td>語末の音変化タイプ</td></tr>
+                        <tr><td class="index-col">16</td><td>語末変化形</td><td>語末変化の形</td></tr>
+                        <tr><td class="index-col">17</td><td>キレコト</td><td>切れ事情報</td></tr>
+                        <tr><td class="index-col">18</td><td>語彙素読み</td><td>語彙素の読み</td></tr>
+                        <tr><td class="index-col">19</td><td>用言/体言</td><td>用言か体言かの区分</td></tr>
+                        <tr><td class="index-col">20</td><td>語彙素細分類</td><td>語彙素のさらに詳細な分類</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

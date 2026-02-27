@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Komachi - 中古・中世日本語学習プラットフォーム</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* 首页专用样式 */
+        .home-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-color), #6B3410);
+            color: #FFF;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+        
+        .hero-title {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+        
+        .hero-description {
+            max-width: 600px;
+            margin: 0 auto;
+            opacity: 0.85;
+            line-height: 1.8;
+        }
+        
+        .features-section {
+            padding: 3rem 2rem;
+            flex: 1;
+            background: var(--bg-color);
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .feature-card {
+            background: var(--panel-bg);
+            border-radius: var(--radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        
+        .feature-title {
+            font-size: 1.4rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .feature-description {
+            color: var(--text-light);
+            line-height: 1.7;
+        }
+        
+        .stats-section {
+            background: var(--panel-bg);
+            padding: 2rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .stats-grid {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            color: var(--text-light);
+        }
+        
+        .footer {
+            background: var(--primary-color);
+            color: #FFF;
+            text-align: center;
+            padding: 1rem;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="home-container">
+        <!-- 头部横幅 -->
+        <section class="hero-section">
+            <h1 class="hero-title">ぷろじぇくと　小町</h1>
+            <p class="hero-subtitle">Project Komachi - 中古・中世日本語学習プラットフォーム</p>
+            <p class="hero-description">
+                古典日本語の学習と研究のための総合プラットフォーム。
+                MeCabとUniDic辞書を用いた高精度な形態素解析、
+                複数文書の横断比較、タグによる文書管理など、
+                多彩な機能を提供します。
+            </p>
+        </section>
+        
+        <!-- 功能区 -->
+        <section class="features-section">
+            <h2 class="section-title">機能を選択</h2>
+            <div class="features-grid">
+                <!-- 文本分析器 -->
+                <a href="{{ url_for('analyzer_page') }}" class="feature-card">
+
+                    <h3 class="feature-title">テキスト解析</h3>
+                    <p class="feature-description">
+                        古典日本語テキストを入力し、形態素解析を実行します。
+                        品詞分類、活用形、語彙情報などを詳細に表示。
+                        解析結果は自動的にデータベースに保存されます。
+                    </p>
+                </a>
+                
+                <!-- 文档库 -->
+                <a href="{{ url_for('library') }}" class="feature-card">
+
+                    <h3 class="feature-title">文書ライブラリ</h3>
+                    <p class="feature-description">
+                        保存された文書を一覧表示・管理します。
+                        時代、文体、作者などのタグで分類・検索が可能。
+                        各文書の詳細情報とメタデータを編集できます。
+                    </p>
+                </a>
+                
+                <!-- 文档比较 -->
+                <a href="{{ url_for('compare') }}" class="feature-card">
+
+                    <h3 class="feature-title">文書比較</h3>
+                    <p class="feature-description">
+                        複数の文書を横並びで比較・対照します。
+                        異なる時代や作者の文書間での語彙や文体の
+                        違いを視覚的に確認できます。
+                    </p>
+                </a>
+                
+                <!-- 辞书信息 -->
+                <a href="{{ url_for('dictionaries') }}" class="feature-card">
+
+                    <h3 class="feature-title">辞書情報</h3>
+                    <p class="feature-description">
+                        利用可能なUniDic辞書の詳細情報を確認します。
+                        中古、和歌、近代文語など、各辞書の特徴と
+                        適用時代について学べます。
+                    </p>
+                </a>
+            </div>
+        </section>
+        
+        <!-- 统计信息 -->
+        <section class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number">{{ stats.document_count }}</div>
+                    <div class="stat-label">保存文書数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ stats.total_tokens }}</div>
+                    <div class="stat-label">解析済み語句</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ stats.dictionary_count }}</div>
+                    <div class="stat-label">利用可能な辞書</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 页脚 -->
+        <footer class="footer">
+            <p>Project Komachi © 2024 - 中古・中世日本語学習プラットフォーム</p>
+        </footer>
+    </div>
+</body>
+</html>
