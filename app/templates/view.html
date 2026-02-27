@@ -8,9 +8,10 @@
     <style>
         /* 文档查看页面专用样式 */
         .view-container {
-            min-height: 100vh;
+            height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
         
         .view-header {
@@ -20,6 +21,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-shrink: 0;
         }
         
         .view-header h1 {
@@ -49,6 +51,7 @@
             display: flex;
             flex: 1;
             overflow: hidden;
+            min-height: 0;
         }
         
         /* 文档信息侧边栏 */
@@ -113,6 +116,7 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            min-height: 0;
         }
         
         .analysis-header {
@@ -127,6 +131,7 @@
             flex: 1;
             overflow-y: auto;
             padding-right: 0.5rem;
+            min-height: 0;
         }
         
         .analysis-title {

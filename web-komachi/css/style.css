@@ -326,15 +326,17 @@ body {
 /* ===== View Page ===== */
 
 .view-container {
-    min-height: 100vh;
+    height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .view-content {
     display: flex;
     flex: 1;
     overflow: hidden;
+    min-height: 0;
 }
 
 .doc-sidebar {
@@ -379,6 +381,7 @@ body {
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    min-height: 0;
 }
 
 .analysis-header {
@@ -403,6 +406,7 @@ body {
     flex: 1;
     overflow-y: auto;
     padding-right: 0.5rem;
+    min-height: 0;
 }
 
 .paragraph {
